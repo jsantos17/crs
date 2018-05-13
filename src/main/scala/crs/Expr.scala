@@ -1,9 +1,13 @@
 package crs
 
-import scalaz.{Functor, Free, Cofree}
-import matryoshka.data.Fix
+import scalaz.{Functor, Free, Cofree, Traverse, Applicative, Show, Cord}
+import matryoshka.data._
 import matryoshka._
+import matryoshka.patterns._
 import matryoshka.implicits._
+
+import scalaz.syntax.applicative._
+import scalaz.syntax.show._
 
 sealed abstract class ExprF[A] extends Product with Serializable
 
@@ -21,6 +25,24 @@ object ExprF {
       case SubtractF(l, r) => SubtractF(f(l), f(r))
     }
   }
+
+  implicit def traverseExprF: Traverse[ExprF] = new Traverse[ExprF] {
+    def traverseImpl[G[_]: Applicative, A, B](fa: ExprF[A])(f: A => G[B]): G[ExprF[B]] = fa match {
+      case LiteralF(v) => (LiteralF(v): ExprF[B]).point[G]
+      case AddF(l, r) => (f(l) |@| f(r))(AddF(_, _))
+      case MultiplyF(l, r) => (f(l) |@| f(r))(MultiplyF(_, _))
+      case SubtractF(l, r) => (f(l) |@| f(r))(SubtractF(_, _))
+    }
+  }
+
+  implicit def showExprF: Show[ExprF[Unit]] = new Show[ExprF[Unit]] {
+    def show[A](a: ExprF[Unit]): Cord = a match {
+      case LiteralF(v) => Cord("0")
+      case AddF(_, _) => Cord("Add")
+      case MultiplyF(_, _) => Cord("Multiply")
+      case SubtractF(_, _) => Cord("Subtract")
+    }
+  }
 }
 
 object Expr {
@@ -28,7 +50,7 @@ object Expr {
 
   type Expr = Fix[ExprF]
   type FreeExpr = Free[ExprF, Unit]
-  type CofreeExpr = Cofree[ExprF, Unit]
+  type TaggedTree = Cofree[ExprF, Integer]
 
   def Literal(v: Int): Expr = Fix(LiteralF(v))
   def Add(l: Expr, r: Expr): Expr = Fix(AddF(l, r))
@@ -42,14 +64,23 @@ object Expr {
     case SubtractF(l, r) => l - r
   }
 
+  def evaluate(e: Expr): Int =
+    e.cata(evaluateƒ)
+
   def convertƒ: Algebra[ExprF, Expr] = {
     case MultiplyF(l, r) => Fix(AddF(l, r))
     case otherwise       => Fix(otherwise)
   }
 
-  def evaluate(e: Expr)(implicit R: Recursive.Aux[Expr, ExprF]): Int =
-    R.cata[Int](e)(evaluateƒ)
+  def convert(e: Expr): Expr =
+    e.cata(convertƒ)
 
-  def evaluate0(e: Expr): Int =
-    e.cata(evaluateƒ)
+  def annotateƒ: Coalgebra[EnvT[Int, ExprF, ?], Expr] =
+    expr => EnvT.envT(evaluate(expr), expr.unFix)
+
+  def annotate(e: Expr): Cofree[ExprF, Int] =
+    e.ana[Cofree[ExprF, Int]][EnvT[Int, ExprF, ?]](annotateƒ)
+
+  def show(e: Expr): String =
+    e.cata(toTree).toString
 }
