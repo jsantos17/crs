@@ -8,8 +8,14 @@ import matryoshka.implicits._
 
 import scalaz.syntax.applicative._
 import scalaz.syntax.show._
+import scalaz.std.anyVal._
 
 sealed abstract class ExprF[A] extends Product with Serializable
+
+object Hole {
+  sealed abstract class Hole
+  final case object SrcHole extends Hole
+}
 
 object ExprF {
   case class LiteralF[A](value: Int) extends ExprF[A]
@@ -37,7 +43,7 @@ object ExprF {
 
   implicit def showExprF: Show[ExprF[Unit]] = new Show[ExprF[Unit]] {
     def show[A](a: ExprF[Unit]): Cord = a match {
-      case LiteralF(v) => Cord("0")
+      case LiteralF(v) => Cord(v.shows)
       case AddF(_, _) => Cord("Add")
       case MultiplyF(_, _) => Cord("Multiply")
       case SubtractF(_, _) => Cord("Subtract")
@@ -49,7 +55,7 @@ object Expr {
   import ExprF._
 
   type Expr = Fix[ExprF]
-  type FreeExpr = Free[ExprF, Unit]
+  type FreeExpr = Free[ExprF, Hole]
   type TaggedTree = Cofree[ExprF, Integer]
 
   def Literal(v: Int): Expr = Fix(LiteralF(v))
@@ -67,13 +73,18 @@ object Expr {
   def evaluate(e: Expr): Int =
     e.cata(evaluateƒ)
 
-  def convertƒ: Algebra[ExprF, Expr] = {
+  def transformƒ: Algebra[ExprF, Expr] = {
     case MultiplyF(l, r) => Fix(AddF(l, r))
     case otherwise       => Fix(otherwise)
   }
 
-  def convert(e: Expr): Expr =
-    e.cata(convertƒ)
+  def transform(e: Expr): Expr =
+    e.cata(transformƒ)
+
+  def cotransformƒ: Coalgebra[ExprF, Expr] = ???
+
+  def cotransform(e: Expr): Expr =
+    e.ana[Expr](cotransformƒ)
 
   def annotateƒ: Coalgebra[EnvT[Int, ExprF, ?], Expr] =
     expr => EnvT.envT(evaluate(expr), expr.unFix)

@@ -43,7 +43,7 @@ object Crs {
     println("Tree: ")
     println(Expr.evaluate(tree))
 
-    println("Converted tree: ")
-    println(Expr.evaluate(Expr.convert(tree)))
+    println("Transformed tree: ")
+    println(Expr.evaluate(Expr.transform(tree)))
   }
 }
