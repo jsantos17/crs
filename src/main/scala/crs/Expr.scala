@@ -1,6 +1,6 @@
 package crs
 
-import scalaz.{Functor, Free, Cofree, Traverse, Applicative, Show, Cord}
+import scalaz.{Functor, Free, Cofree, Traverse, Applicative, Show, Cord, Tree, \/-, -\/}
 import matryoshka.data._
 import matryoshka._
 import matryoshka.patterns._
@@ -55,8 +55,9 @@ object Expr {
   import ExprF._
 
   type Expr = Fix[ExprF]
-  type FreeExpr = Free[ExprF, Hole]
   type TaggedTree = Cofree[ExprF, Integer]
+
+  implicit def showString: Show[String] = Show.showFromToString
 
   def Literal(v: Int): Expr = Fix(LiteralF(v))
   def Add(l: Expr, r: Expr): Expr = Fix(AddF(l, r))
@@ -81,7 +82,10 @@ object Expr {
   def transform(e: Expr): Expr =
     e.cata(transformƒ)
 
-  def cotransformƒ: Coalgebra[ExprF, Expr] = ???
+  def cotransformƒ: Coalgebra[ExprF, Expr] = {
+    case Fix(MultiplyF(l, r)) => AddF(l, r)
+    case Fix(otherwise) => otherwise
+  }
 
   def cotransform(e: Expr): Expr =
     e.ana[Expr](cotransformƒ)
@@ -92,6 +96,29 @@ object Expr {
   def annotate(e: Expr): Cofree[ExprF, Int] =
     e.ana[Cofree[ExprF, Int]][EnvT[Int, ExprF, ?]](annotateƒ)
 
+  def showƒ: Algebra[ExprF, Tree[String]] = {
+    case LiteralF(i) => Tree.Leaf(i.shows)
+    case AddF(l, r) => Tree.Node("Add", Stream(l, r))
+    case MultiplyF(l, r) => Tree.Node("Multiply", Stream(l, r))
+    case SubtractF(l, r) => Tree.Node("Subtract", Stream(l, r))
+  }
+
   def show(e: Expr): String =
-    e.cata(toTree).toString
+    e.cata(showƒ).drawTree
+}
+
+object ExprFn {
+  import Expr.showString
+
+  type UnaryFn = Free[ExprF, Hole]
+
+  def showƒ: Algebra[CoEnv[Hole, ExprF, ?], Tree[String]] = {
+    case CoEnv(-\/(h)) => Tree.Leaf("x")
+    case CoEnv(\/-(exprf)) => Expr.showƒ(exprf)
+  }
+
+  def show(e: UnaryFn)(
+    implicit R: Recursive.Aux[UnaryFn, CoEnv[Hole, ExprF, ?]]
+  ): String =
+    R.cata(e)(showƒ).drawTree
 }

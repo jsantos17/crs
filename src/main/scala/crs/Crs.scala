@@ -40,10 +40,16 @@ object Crs {
           Expr.Literal(6)),
       Expr.Literal(-3))
 
-    println("Tree: ")
+    println("Tree")
+    println(Expr.show(tree))
+
+    println("Evaluated tree: ")
     println(Expr.evaluate(tree))
 
     println("Transformed tree: ")
-    println(Expr.evaluate(Expr.transform(tree)))
+    println(Expr.show(Expr.transform(tree)))
+
+    println("Cotransformed tree: ")
+    println(Expr.show(Expr.cotransform(tree)))
   }
 }
