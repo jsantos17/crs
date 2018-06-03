@@ -80,4 +80,14 @@ object Expr {
 
   def evaluate(e: Expr): Int =
     e.cata(evaluateƒ)
+
+  // checkpoint_07
+  // spicing it up
+  def transformƒ: Algebra[ExprF, Expr] = {
+    case MultiplyF(l, r) => Fix(AddF(l, r))
+    case otherwise       => Fix(otherwise)
+  }
+
+  def transform(e: Expr): Expr =
+    e.cata(transformƒ)
 }

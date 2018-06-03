@@ -65,5 +65,10 @@ object Crs {
     println(separator)
     println("Evaluated tree: ")
     println(Expr.evaluate(tree))
+
+    // checkpoint_07
+    println(separator)
+    println("Transformed tree: ")
+    println(Expr.show(Expr.transform(tree)))
   }
 }
