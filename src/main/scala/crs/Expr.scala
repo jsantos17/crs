@@ -59,6 +59,7 @@ object Expr {
   def Multiply(l: Expr, r: Expr): Expr = Fix(MultiplyF(l, r))
   def Subtract(l: Expr, r: Expr): Expr = Fix(SubtractF(l, r))
 
+  // checkpoint_05
   def showƒ: Algebra[ExprF, Tree[String]] = {
     case LiteralF(i) => Tree.Leaf(i.shows)
     case AddF(l, r) => Tree.Node("Add", Stream(l, r))
@@ -69,15 +70,7 @@ object Expr {
   def show(e: Expr): String =
     e.cata(showƒ).drawTree
 
-  def showAnnƒ: Algebra[EnvT[Int, ExprF, ?], Tree[String]] = _.runEnvT match {
-    case (ann, fa) => Tree.Node(ann.shows, Stream(showƒ(fa)))
-  }
-
-  def showAnn(e: Cofree[ExprF, Int])(
-    implicit R: Recursive.Aux[Cofree[ExprF, Int], EnvT[Int, ExprF, ?]]
-  ): String = R.cata(e)(showAnnƒ).drawTree
-
-
+  // checkpoint_06
   def evaluateƒ: Algebra[ExprF, Int] = {
     case LiteralF(i)     => i
     case AddF(l, r)      => l + r
@@ -88,8 +81,8 @@ object Expr {
   def evaluate(e: Expr): Int =
     e.cata(evaluateƒ)
 
+  // checkpoint_07
   // spicing it up
-
   def transformƒ: Algebra[ExprF, Expr] = {
     case MultiplyF(l, r) => Fix(AddF(l, r))
     case otherwise       => Fix(otherwise)
@@ -98,6 +91,7 @@ object Expr {
   def transform(e: Expr): Expr =
     e.cata(transformƒ)
 
+  // checkpoint_08
   def cotransformƒ: Coalgebra[ExprF, Expr] = {
     case Fix(MultiplyF(l, r)) => AddF(l, r)
     case Fix(otherwise) => otherwise
@@ -105,6 +99,16 @@ object Expr {
 
   def cotransform(e: Expr): Expr =
     e.ana[Expr](cotransformƒ)
+
+  // checkpoint_09
+  def showAnnƒ: Algebra[EnvT[Int, ExprF, ?], Tree[String]] = _.runEnvT match {
+    case (ann, fa) => Tree.Node(ann.shows, Stream(showƒ(fa)))
+  }
+
+  def showAnn(e: Cofree[ExprF, Int])(
+    implicit R: Recursive.Aux[Cofree[ExprF, Int], EnvT[Int, ExprF, ?]]
+  ): String = R.cata(e)(showAnnƒ).drawTree
+
 
   def annotateƒ: Coalgebra[EnvT[Int, ExprF, ?], Expr] =
     expr => EnvT.envT(evaluate(expr), expr.unFix)
@@ -129,12 +133,14 @@ object UnaryFn {
     case CoEnv(\/-(exprf)) => Expr.showƒ(exprf)
   }
 
+  // checkpoint_10
   def show(e: UnaryFn)(
     implicit R: Recursive.Aux[UnaryFn, CoEnv[Hole, ExprF, ?]]
   ): String =
     R.cata(e)(showƒ).drawTree
 
   // splicing it up
+  // checkpoint_11
   def spliceƒ(h: Int): Algebra[CoEnv[Hole, ExprF, ?], Fix[ExprF]] = _.run match {
     case (-\/(hole)) => Expr.Literal(h)
     case (\/-(other)) => Fix(other)

@@ -40,22 +40,7 @@ object LinkedList {
   def show(list: LinkedList): String =
     (Cord("[") ++ list.cata(showƒ)).shows
 
-  def lengthƒ: Algebra[LinkedListF, Int] = {
-    case NilF() => 0
-    case ConsF(_, next) => next + 1
-  }
-
-  def length(list: LinkedList): Int =
-    list.cata(lengthƒ)
-
-  def mapƒ(f: Int => Int): Algebra[LinkedListF, LinkedList] = {
-    case NilF()         => Fix(NilF())
-    case ConsF(e, next) => Fix(ConsF(f(e), next))
-  }
-
-  def map(list: LinkedList)(f: Int => Int): LinkedList =
-    list.cata[LinkedList](mapƒ(f))
-
+  // checkpoint_01
   def sumƒ: Algebra[LinkedListF, Int] = {
     case NilF() => 0
     case ConsF(e, next) => next + e
@@ -64,6 +49,24 @@ object LinkedList {
   def sum(list: LinkedList): Int =
     list.cata(sumƒ)
 
+  def lengthƒ: Algebra[LinkedListF, Int] = {
+    case NilF() => 0
+    case ConsF(_, next) => next + 1
+  }
+
+  def length(list: LinkedList): Int =
+    list.cata(lengthƒ)
+
+  // checkpoint_02
+  def mapƒ(f: Int => Int): Algebra[LinkedListF, LinkedList] = {
+    case NilF()         => Fix(NilF())
+    case ConsF(e, next) => Fix(ConsF(f(e), next))
+  }
+
+  def map(list: LinkedList)(f: Int => Int): LinkedList =
+    list.cata[LinkedList](mapƒ(f))
+
+  // checkpoint_03
   def filterƒ(f: Int => Boolean): Algebra[LinkedListF, LinkedList] = {
     case NilF() => Fix(NilF())
     case ConsF(e, next) if f(e) => Fix(ConsF(e, next))
@@ -73,7 +76,7 @@ object LinkedList {
   def filter(predicate: Int => Boolean)(list: LinkedList): LinkedList =
     list.cata(filterƒ(predicate))
 
-  // LinkedListF[(LinkedList, Cord)] => Cord
+  // checkpoint_04
   def smartShowƒ: GAlgebra[(LinkedList, ?), LinkedListF, Cord] = {
     case NilF() => Cord("]")
     case ConsF(e, (Fix(NilF()), next)) => Cord(e.toString) ++ next
