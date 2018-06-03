@@ -16,5 +16,12 @@ object Crs {
 
     println("List: ")
     println(LinkedList.show(list))
+
+    // checkpoint_01
+    println(separator)
+    println("Sums to:")
+    println(LinkedList.sum(list))
+    println("Length")
+    println(LinkedList.length(list))
   }
 }
