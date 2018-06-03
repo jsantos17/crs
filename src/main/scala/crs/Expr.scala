@@ -90,4 +90,13 @@ object Expr {
 
   def transform(e: Expr): Expr =
     e.cata(transformƒ)
+
+  // checkpoint_08
+  def cotransformƒ: Coalgebra[ExprF, Expr] = {
+    case Fix(MultiplyF(l, r)) => AddF(l, r)
+    case Fix(otherwise) => otherwise
+  }
+
+  def cotransform(e: Expr): Expr =
+    e.ana[Expr](cotransformƒ)
 }
