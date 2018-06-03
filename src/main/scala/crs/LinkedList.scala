@@ -75,4 +75,15 @@ object LinkedList {
 
   def filter(predicate: Int => Boolean)(list: LinkedList): LinkedList =
     list.cata(filterƒ(predicate))
+
+  // checkpoint_04
+  def smartShowƒ: GAlgebra[(LinkedList, ?), LinkedListF, Cord] = {
+    case NilF() => Cord("]")
+    case ConsF(e, (Fix(NilF()), next)) => Cord(e.toString) ++ next
+    case ConsF(e, (_, next)) => Cord(e.toString) ++ Cord(",") ++ next
+  }
+
+  def smartShow(list: LinkedList): String =
+    (Cord("[") ++ list.para(smartShowƒ)).shows
+
 }

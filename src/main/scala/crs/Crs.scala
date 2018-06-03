@@ -41,5 +41,10 @@ object Crs {
     val filtered = LinkedList.filter(_ % 2 != 0)(list)
 
     println(LinkedList.show(filtered))
+
+    // checkpoint_04
+    println(separator)
+    println("List (with para): ")
+    println(LinkedList.smartShow(list))
   }
 }
