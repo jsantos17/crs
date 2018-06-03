@@ -46,5 +46,19 @@ object Crs {
     println(separator)
     println("List (with para): ")
     println(LinkedList.smartShow(list))
+
+    // checkpoint_05
+    println(separator)
+    val tree =
+      Expr.Subtract(
+        Expr.Multiply(
+          Expr.Add(
+            Expr.Literal(3),
+            Expr.Literal(4)),
+          Expr.Literal(6)),
+      Expr.Literal(-3))
+
+    println("Tree")
+    println(Expr.show(tree))
   }
 }

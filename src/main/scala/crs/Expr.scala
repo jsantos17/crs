@@ -58,4 +58,15 @@ object Expr {
   def Add(l: Expr, r: Expr): Expr = Fix(AddF(l, r))
   def Multiply(l: Expr, r: Expr): Expr = Fix(MultiplyF(l, r))
   def Subtract(l: Expr, r: Expr): Expr = Fix(SubtractF(l, r))
+
+  // checkpoint_05
+  def showƒ: Algebra[ExprF, Tree[String]] = {
+    case LiteralF(i) => Tree.Leaf(i.shows)
+    case AddF(l, r) => Tree.Node("Add", Stream(l, r))
+    case MultiplyF(l, r) => Tree.Node("Multiply", Stream(l, r))
+    case SubtractF(l, r) => Tree.Node("Subtract", Stream(l, r))
+  }
+
+  def show(e: Expr): String =
+    e.cata(showƒ).drawTree
 }
