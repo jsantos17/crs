@@ -1,21 +1,16 @@
 package crs
 
 import scalaz.{Functor, Free, Cofree, Traverse, Applicative, Show, Cord, Tree, \/-, -\/}
-import matryoshka.data._
 import matryoshka._
-import matryoshka.patterns._
+import matryoshka.data._
 import matryoshka.implicits._
-
+import matryoshka.patterns._
+import scalaz.std.anyVal._
+import scalaz.std.string._
 import scalaz.syntax.applicative._
 import scalaz.syntax.show._
-import scalaz.std.anyVal._
 
 sealed abstract class ExprF[A] extends Product with Serializable
-
-object Hole {
-  sealed abstract class Hole
-  final case object SrcHole extends Hole
-}
 
 object ExprF {
   case class LiteralF[A](value: Int) extends ExprF[A]
@@ -74,6 +69,8 @@ object Expr {
   def evaluate(e: Expr): Int =
     e.cata(evaluateƒ)
 
+  // spicing it up
+
   def transformƒ: Algebra[ExprF, Expr] = {
     case MultiplyF(l, r) => Fix(AddF(l, r))
     case otherwise       => Fix(otherwise)
@@ -105,15 +102,30 @@ object Expr {
 
   def show(e: Expr): String =
     e.cata(showƒ).drawTree
+
+  def showAnnƒ: Algebra[EnvT[Int, ExprF, ?], Tree[String]] = _.runEnvT match {
+    case (ann, fa) => Tree.Node(ann.shows, Stream(showƒ(fa)))
+  }
+
+  def showAnn(e: Cofree[ExprF, Int])(
+    implicit R: Recursive.Aux[Cofree[ExprF, Int], EnvT[Int, ExprF, ?]]
+  ): String = R.cata(e)(showAnnƒ).drawTree
+
 }
 
-object ExprFn {
+object UnaryFn {
   import Expr.showString
 
   type UnaryFn = Free[ExprF, Hole]
 
+  def Literal(v: Int): UnaryFn = Free.liftF(ExprF.LiteralF(v))
+  def Add(l: UnaryFn, r: UnaryFn): UnaryFn = Free.roll(ExprF.AddF(l, r))
+  def Multiply(l: UnaryFn, r: UnaryFn): UnaryFn = Free.roll(ExprF.MultiplyF(l, r))
+  def Subtract(l: UnaryFn, r: UnaryFn): UnaryFn = Free.roll(ExprF.SubtractF(l, r))
+  def HoleU: UnaryFn = Free.point[ExprF, Hole](Hole)
+
   def showƒ: Algebra[CoEnv[Hole, ExprF, ?], Tree[String]] = {
-    case CoEnv(-\/(h)) => Tree.Leaf("x")
+    case CoEnv(-\/(h)) => Tree.Leaf("○")
     case CoEnv(\/-(exprf)) => Expr.showƒ(exprf)
   }
 
@@ -121,4 +133,16 @@ object ExprFn {
     implicit R: Recursive.Aux[UnaryFn, CoEnv[Hole, ExprF, ?]]
   ): String =
     R.cata(e)(showƒ).drawTree
+
+  // splicing it up
+
+  def spliceƒ(h: Int): Algebra[CoEnv[Hole, ExprF, ?], Fix[ExprF]] = _.run match {
+    case (-\/(hole)) => Expr.Literal(h)
+    case (\/-(other)) => Fix(other)
+  }
+
+  def splice(h: Int, e: UnaryFn)(
+    implicit R: Recursive.Aux[UnaryFn, CoEnv[Hole, ExprF, ?]]
+  ): Expr.Expr =
+    R.cata(e)(spliceƒ(h))
 }

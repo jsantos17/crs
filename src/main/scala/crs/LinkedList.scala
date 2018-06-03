@@ -9,8 +9,6 @@ import matryoshka.patterns._
 
 import scalaz.syntax.show._
 
-// E is the type of elements in the list
-// A is a recursive position
 sealed abstract class LinkedListF[A] extends Product with Serializable
 
 object LinkedListF {
@@ -30,7 +28,7 @@ object LinkedList {
   import LinkedListF._
 
   def Nil[A]: LinkedList = Fix[LinkedListF](NilF())
-  def Cons[A](e: Int, next: LinkedList): LinkedList = Fix[LinkedListF](ConsF(e, next))
+  def Cons[A](e: Int, next: LinkedList): LinkedList = Fix(ConsF(e, next))
 
   type LinkedList = Fix[LinkedListF]
 
@@ -43,8 +41,8 @@ object LinkedList {
     list.cata(lengthƒ)
 
   def mapƒ(f: Int => Int): Algebra[LinkedListF, LinkedList] = {
-    case NilF()         => Fix[LinkedListF](NilF())
-    case ConsF(e, next) => Fix[LinkedListF](ConsF(f(e), next))
+    case NilF()         => Fix(NilF())
+    case ConsF(e, next) => Fix(ConsF(f(e), next))
   }
 
   def map(list: LinkedList)(f: Int => Int): LinkedList =
@@ -58,6 +56,15 @@ object LinkedList {
   def sum(list: LinkedList): Int =
     list.cata(sumƒ)
 
+  def filterƒ(f: Int => Boolean): Algebra[LinkedListF, LinkedList] = {
+    case NilF() => Fix(NilF())
+    case ConsF(e, next) if f(e) => Fix(ConsF(e, next))
+    case ConsF(_, next) => next
+  }
+
+  def filter(predicate: Int => Boolean)(list: LinkedList): LinkedList =
+    list.cata(filterƒ(predicate))
+
   def showƒ: Algebra[LinkedListF, Cord] = {
     case NilF()         => Cord("]")
     case ConsF(e, next) => Cord(e.toString) ++ Cord(",") ++ next
@@ -65,4 +72,15 @@ object LinkedList {
 
   def show(list: LinkedList): String =
     (Cord("[") ++ list.cata(showƒ)).shows
+
+  // LinkedListF[(LinkedList, Cord)] => Cord
+  def smartShowƒ: GAlgebra[(LinkedList, ?), LinkedListF, Cord] = {
+    case NilF() => Cord("]")
+    case ConsF(e, (Fix(NilF()), next)) => Cord(e.toString) ++ next
+    case ConsF(e, (_, next)) => Cord(e.toString) ++ Cord(",") ++ next
+  }
+
+  def smartShow(list: LinkedList): String =
+    (Cord("[") ++ list.para(smartShowƒ)).shows
+
 }

@@ -22,12 +22,20 @@ object Crs {
     println("Length")
     println(LinkedList.length(list))
 
+    println("List (with para): ")
+    println(LinkedList.smartShow(list))
+
     println("Doubled list: ")
-    println(LinkedList.show(doubledList))
+    println(LinkedList.smartShow(doubledList))
     println("Sums to:")
     println(LinkedList.sum(doubledList))
     println("Length")
     println(LinkedList.length(list))
+
+    println("Filtered, keeping odd")
+    val filtered = LinkedList.filter(_ % 2 != 0)(list)
+
+    println(LinkedList.smartShow(filtered))
 
     println(separator)
 
@@ -51,5 +59,32 @@ object Crs {
 
     println("Cotransformed tree: ")
     println(Expr.show(Expr.cotransform(tree)))
+
+    println(separator)
+    println("Annotated")
+
+    println(Expr.showAnn(Expr.annotate(tree)))
+
+    println(separator)
+
+    println("UnaryFn")
+
+    val sampleFn =
+      UnaryFn.Multiply(
+        UnaryFn.Add(
+          UnaryFn.Literal(5),
+          UnaryFn.HoleU),
+          UnaryFn.Literal(2))
+
+    println(UnaryFn.show(sampleFn))
+
+    println("Spliced UnaryFn")
+
+    val spliced = UnaryFn.splice(10, sampleFn)
+
+    println(Expr.show(spliced))
+
+    println("Spliced and evaluated")
+    println(Expr.evaluate(spliced))
   }
 }
