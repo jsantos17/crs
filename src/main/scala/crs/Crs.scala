@@ -93,5 +93,16 @@ object Crs {
           UnaryFn.Literal(2))
 
     println(UnaryFn.show(sampleFn))
+
+    // checkpoint_11
+    println(separator)
+    println("Spliced UnaryFn")
+
+    val spliced = UnaryFn.splice(10, sampleFn)
+    println(Expr.show(spliced))
+
+    println(separator)
+    println("Spliced and evaluated")
+    println(Expr.evaluate(spliced))
   }
 }

@@ -138,4 +138,16 @@ object UnaryFn {
     implicit R: Recursive.Aux[UnaryFn, CoEnv[Hole, ExprF, ?]]
   ): String =
     R.cata(e)(showƒ).drawTree
+
+  // splicing it up
+  // checkpoint_11
+  def spliceƒ(h: Int): Algebra[CoEnv[Hole, ExprF, ?], Fix[ExprF]] = _.run match {
+    case (-\/(hole)) => Expr.Literal(h)
+    case (\/-(other)) => Fix(other)
+  }
+
+  def splice(h: Int, e: UnaryFn)(
+    implicit R: Recursive.Aux[UnaryFn, CoEnv[Hole, ExprF, ?]]
+  ): Expr.Expr =
+    R.cata(e)(spliceƒ(h))
 }
