@@ -65,4 +65,14 @@ object LinkedList {
 
   def map(list: LinkedList)(f: Int => Int): LinkedList =
     list.cata[LinkedList](mapƒ(f))
+
+  // checkpoint_03
+  def filterƒ(f: Int => Boolean): Algebra[LinkedListF, LinkedList] = {
+    case NilF() => Fix(NilF())
+    case ConsF(e, next) if f(e) => Fix(ConsF(e, next))
+    case ConsF(_, next) => next
+  }
+
+  def filter(predicate: Int => Boolean)(list: LinkedList): LinkedList =
+    list.cata(filterƒ(predicate))
 }

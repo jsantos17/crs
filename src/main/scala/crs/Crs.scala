@@ -34,5 +34,12 @@ object Crs {
     println(LinkedList.sum(doubledList))
     println("Length")
     println(LinkedList.length(list))
+
+    // checkpoint_03
+    println(separator)
+    println("Filtered, keeping odd")
+    val filtered = LinkedList.filter(_ % 2 != 0)(list)
+
+    println(LinkedList.show(filtered))
   }
 }
