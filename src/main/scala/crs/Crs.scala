@@ -23,5 +23,16 @@ object Crs {
     println(LinkedList.sum(list))
     println("Length")
     println(LinkedList.length(list))
+
+    // checkpoint_02
+    println(separator)
+    val doubledList = LinkedList.map(list)(i => i*2)
+
+    println("Doubled list: ")
+    println(LinkedList.show(doubledList))
+    println("Sums to:")
+    println(LinkedList.sum(doubledList))
+    println("Length")
+    println(LinkedList.length(list))
   }
 }
