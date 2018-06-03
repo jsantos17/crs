@@ -32,6 +32,14 @@ object LinkedList {
 
   type LinkedList = Fix[LinkedListF]
 
+  def showƒ: Algebra[LinkedListF, Cord] = {
+    case NilF()         => Cord("]")
+    case ConsF(e, next) => Cord(e.toString) ++ Cord(",") ++ next
+  }
+
+  def show(list: LinkedList): String =
+    (Cord("[") ++ list.cata(showƒ)).shows
+
   def lengthƒ: Algebra[LinkedListF, Int] = {
     case NilF() => 0
     case ConsF(_, next) => next + 1
@@ -64,14 +72,6 @@ object LinkedList {
 
   def filter(predicate: Int => Boolean)(list: LinkedList): LinkedList =
     list.cata(filterƒ(predicate))
-
-  def showƒ: Algebra[LinkedListF, Cord] = {
-    case NilF()         => Cord("]")
-    case ConsF(e, next) => Cord(e.toString) ++ Cord(",") ++ next
-  }
-
-  def show(list: LinkedList): String =
-    (Cord("[") ++ list.cata(showƒ)).shows
 
   // LinkedListF[(LinkedList, Cord)] => Cord
   def smartShowƒ: GAlgebra[(LinkedList, ?), LinkedListF, Cord] = {

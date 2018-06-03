@@ -59,6 +59,25 @@ object Expr {
   def Multiply(l: Expr, r: Expr): Expr = Fix(MultiplyF(l, r))
   def Subtract(l: Expr, r: Expr): Expr = Fix(SubtractF(l, r))
 
+  def showƒ: Algebra[ExprF, Tree[String]] = {
+    case LiteralF(i) => Tree.Leaf(i.shows)
+    case AddF(l, r) => Tree.Node("Add", Stream(l, r))
+    case MultiplyF(l, r) => Tree.Node("Multiply", Stream(l, r))
+    case SubtractF(l, r) => Tree.Node("Subtract", Stream(l, r))
+  }
+
+  def show(e: Expr): String =
+    e.cata(showƒ).drawTree
+
+  def showAnnƒ: Algebra[EnvT[Int, ExprF, ?], Tree[String]] = _.runEnvT match {
+    case (ann, fa) => Tree.Node(ann.shows, Stream(showƒ(fa)))
+  }
+
+  def showAnn(e: Cofree[ExprF, Int])(
+    implicit R: Recursive.Aux[Cofree[ExprF, Int], EnvT[Int, ExprF, ?]]
+  ): String = R.cata(e)(showAnnƒ).drawTree
+
+
   def evaluateƒ: Algebra[ExprF, Int] = {
     case LiteralF(i)     => i
     case AddF(l, r)      => l + r
@@ -92,25 +111,6 @@ object Expr {
 
   def annotate(e: Expr): Cofree[ExprF, Int] =
     e.ana[Cofree[ExprF, Int]][EnvT[Int, ExprF, ?]](annotateƒ)
-
-  def showƒ: Algebra[ExprF, Tree[String]] = {
-    case LiteralF(i) => Tree.Leaf(i.shows)
-    case AddF(l, r) => Tree.Node("Add", Stream(l, r))
-    case MultiplyF(l, r) => Tree.Node("Multiply", Stream(l, r))
-    case SubtractF(l, r) => Tree.Node("Subtract", Stream(l, r))
-  }
-
-  def show(e: Expr): String =
-    e.cata(showƒ).drawTree
-
-  def showAnnƒ: Algebra[EnvT[Int, ExprF, ?], Tree[String]] = _.runEnvT match {
-    case (ann, fa) => Tree.Node(ann.shows, Stream(showƒ(fa)))
-  }
-
-  def showAnn(e: Cofree[ExprF, Int])(
-    implicit R: Recursive.Aux[Cofree[ExprF, Int], EnvT[Int, ExprF, ?]]
-  ): String = R.cata(e)(showAnnƒ).drawTree
-
 }
 
 object UnaryFn {
@@ -135,7 +135,6 @@ object UnaryFn {
     R.cata(e)(showƒ).drawTree
 
   // splicing it up
-
   def spliceƒ(h: Int): Algebra[CoEnv[Hole, ExprF, ?], Fix[ExprF]] = _.run match {
     case (-\/(hole)) => Expr.Literal(h)
     case (\/-(other)) => Fix(other)
