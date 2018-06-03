@@ -132,4 +132,10 @@ object UnaryFn {
     case CoEnv(-\/(h)) => Tree.Leaf("○")
     case CoEnv(\/-(exprf)) => Expr.showƒ(exprf)
   }
+
+  // checkpoint_10
+  def show(e: UnaryFn)(
+    implicit R: Recursive.Aux[UnaryFn, CoEnv[Hole, ExprF, ?]]
+  ): String =
+    R.cata(e)(showƒ).drawTree
 }

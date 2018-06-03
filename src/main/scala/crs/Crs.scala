@@ -80,5 +80,18 @@ object Crs {
     println(separator)
     println("Annotated")
     println(Expr.showAnn(Expr.annotate(tree)))
+
+    // checkpoint_10
+    println(separator)
+    println("UnaryFn")
+
+    val sampleFn =
+      UnaryFn.Multiply(
+        UnaryFn.Add(
+          UnaryFn.Literal(5),
+          UnaryFn.HoleU),
+          UnaryFn.Literal(2))
+
+    println(UnaryFn.show(sampleFn))
   }
 }
