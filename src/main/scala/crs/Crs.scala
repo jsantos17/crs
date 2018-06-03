@@ -75,5 +75,10 @@ object Crs {
     println(separator)
     println("Cotransformed tree: ")
     println(Expr.show(Expr.cotransform(tree)))
+
+    // checkpoint_09
+    println(separator)
+    println("Annotated")
+    println(Expr.showAnn(Expr.annotate(tree)))
   }
 }

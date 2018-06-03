@@ -99,4 +99,37 @@ object Expr {
 
   def cotransform(e: Expr): Expr =
     e.ana[Expr](cotransformƒ)
+
+  // checkpoint_09
+  def showAnnƒ: Algebra[EnvT[Int, ExprF, ?], Tree[String]] = _.runEnvT match {
+    case (ann, fa) => Tree.Node(ann.shows, Stream(showƒ(fa)))
+  }
+
+  def showAnn(e: Cofree[ExprF, Int])(
+    implicit R: Recursive.Aux[Cofree[ExprF, Int], EnvT[Int, ExprF, ?]]
+  ): String = R.cata(e)(showAnnƒ).drawTree
+
+
+  def annotateƒ: Coalgebra[EnvT[Int, ExprF, ?], Expr] =
+    expr => EnvT.envT(evaluate(expr), expr.unFix)
+
+  def annotate(e: Expr): Cofree[ExprF, Int] =
+    e.ana[Cofree[ExprF, Int]][EnvT[Int, ExprF, ?]](annotateƒ)
+}
+
+object UnaryFn {
+  import Expr.showString
+
+  type UnaryFn = Free[ExprF, Hole]
+
+  def Literal(v: Int): UnaryFn = Free.liftF(ExprF.LiteralF(v))
+  def Add(l: UnaryFn, r: UnaryFn): UnaryFn = Free.roll(ExprF.AddF(l, r))
+  def Multiply(l: UnaryFn, r: UnaryFn): UnaryFn = Free.roll(ExprF.MultiplyF(l, r))
+  def Subtract(l: UnaryFn, r: UnaryFn): UnaryFn = Free.roll(ExprF.SubtractF(l, r))
+  def HoleU: UnaryFn = Free.point[ExprF, Hole](Hole)
+
+  def showƒ: Algebra[CoEnv[Hole, ExprF, ?], Tree[String]] = {
+    case CoEnv(-\/(h)) => Tree.Leaf("○")
+    case CoEnv(\/-(exprf)) => Expr.showƒ(exprf)
+  }
 }
