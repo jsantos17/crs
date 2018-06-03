@@ -69,4 +69,15 @@ object Expr {
 
   def show(e: Expr): String =
     e.cata(showƒ).drawTree
+
+  // checkpoint_06
+  def evaluateƒ: Algebra[ExprF, Int] = {
+    case LiteralF(i)     => i
+    case AddF(l, r)      => l + r
+    case MultiplyF(l, r) => l * r
+    case SubtractF(l, r) => l - r
+  }
+
+  def evaluate(e: Expr): Int =
+    e.cata(evaluateƒ)
 }
